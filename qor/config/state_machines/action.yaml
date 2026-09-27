@@ -1,0 +1,154 @@
+# Action State Machine -- CLAUDE.md §15.
+#
+# Terminal state is SETTLED, not EXECUTED: EXECUTED only means "the request went
+# out", SETTLED means "reality changed and we confirmed it".
+#
+# Dry run is NOT a state. It is `dry_run = true`, and it reuses this same machine
+# with a different POLICY STOP STATE (see stop_states). SANDBOX is not dry_run:
+# a SANDBOX action with dry_run=false may execute against a controlled world.
+# The `action_is_not_dry_run` guard still guarantees a dry run never enters
+# EXECUTING. LIVE remains unreachable: execute requires action.execute.sandbox
+# plus action_environment_is_sandbox, and nobody holds action.execute.
+
+name: action
+entity: Action
+initial: REQUESTED
+
+# Policy stop states, consumed by the Task guard `all_actions_at_stop_state`.
+# This is configuration, not a new state.
+stop_states:
+  dry_run: [APPROVED, REJECTED, BLOCKED, CANCELLED]
+  live: [SETTLED, REJECTED, BLOCKED, CANCELLED, COMPENSATED]
+
+states:
+  - name: REQUESTED
+  - name: PERMISSION_CHECK
+  - name: RISK_CHECK
+  - name: APPROVAL_PENDING
+  - name: APPROVED
+  - name: EXECUTING
+  - name: EXECUTED
+  - name: VERIFYING
+  - name: SETTLED
+    terminal: true
+  - name: REJECTED
+    terminal: true
+    exceptional: true
+  - name: BLOCKED
+    terminal: true
+    exceptional: true
+  - name: FAILED
+    exceptional: true
+  - name: CANCELLED
+    terminal: true
+  - name: COMPENSATING
+    exceptional: true
+  - name: COMPENSATED
+    terminal: true
+    exceptional: true
+
+transitions:
+  - name: validate
+    from: REQUESTED
+    to: PERMISSION_CHECK
+    guards: [action_has_decision, action_payload_valid, action_idempotency_key_unique]
+    emits: qor.action.permission_check
+
+  - name: permission_passed
+    from: PERMISSION_CHECK
+    to: RISK_CHECK
+    guards: [action_permission_granted]
+    emits: qor.action.risk_check
+
+  - name: permission_denied
+    from: PERMISSION_CHECK
+    to: REJECTED
+    emits: qor.action.rejected
+
+  - name: risk_passed
+    from: RISK_CHECK
+    to: APPROVAL_PENDING
+    guards: [action_risk_cleared]
+    emits: qor.action.approval_pending
+
+  - name: risk_blocked
+    from: RISK_CHECK
+    to: BLOCKED
+    emits: qor.action.blocked
+
+  - name: approval_granted
+    from: APPROVAL_PENDING
+    to: APPROVED
+    guards: [action_approval_satisfied]
+    emits: qor.action.approved
+
+  - name: approval_denied
+    from: APPROVAL_PENDING
+    to: REJECTED
+    emits: qor.action.rejected
+
+  # Door to the controlled sandbox world. Dry runs cannot pass through it.
+  # LIVE remains closed: permission is sandbox-only and a guard rejects LIVE.
+  - name: execute
+    from: APPROVED
+    to: EXECUTING
+    permission: action.execute.sandbox
+    guards:
+      - action_is_not_dry_run
+      - action_all_checks_passed
+      - organization_not_halted
+      - action_environment_is_sandbox
+    emits: qor.action.executing
+
+  - name: executed
+    from: EXECUTING
+    to: EXECUTED
+    emits: qor.action.executed
+
+  - name: verify
+    from: EXECUTED
+    to: VERIFYING
+    emits: qor.action.verifying
+
+  - name: settle
+    from: VERIFYING
+    to: SETTLED
+    guards: [action_verification_matched]
+    emits: qor.action.settled
+
+  - name: verification_failed
+    from: VERIFYING
+    to: FAILED
+    emits: qor.action.failed
+
+  - name: fail
+    from: EXECUTING
+    to: FAILED
+    emits: qor.action.failed
+
+  - name: retry
+    from: FAILED
+    to: EXECUTING
+    guards: [action_retry_available, action_is_not_dry_run, action_environment_is_sandbox]
+    emits: qor.action.executing
+
+  - name: compensate
+    from: FAILED
+    to: COMPENSATING
+    permission: action.compensate
+    emits: qor.action.compensating
+
+  - name: compensated
+    from: COMPENSATING
+    to: COMPENSATED
+    emits: qor.action.compensated
+
+  - name: cancel
+    from: [REQUESTED, PERMISSION_CHECK, RISK_CHECK, APPROVAL_PENDING, APPROVED]
+    to: CANCELLED
+    emits: qor.action.cancelled
+
+  - name: kill_switch
+    from: [REQUESTED, PERMISSION_CHECK, RISK_CHECK, APPROVAL_PENDING, APPROVED]
+    to: BLOCKED
+    emits: qor.action.blocked

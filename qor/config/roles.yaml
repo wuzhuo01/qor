@@ -1,0 +1,77 @@
+# Role definitions -- authority templates.
+#
+# Agents hold no intrinsic permissions. Everything an agent may do comes from the
+# union of its roles, minus its explicit denials, minus the assignment scope. That
+# is the three-layer narrowing in proposal §5.21.1.
+
+roles:
+  - key: role.human_cio
+    name: Human CIO
+    purpose: Final accountability. Holds the permissions no AI may ever hold.
+    human_only: true
+    max_risk_level: CRITICAL
+    can_approve_up_to: CRITICAL
+    granted_permissions:
+      - task.propose
+      - task.admit
+      - task.cancel
+      - task.resolve_escalation
+      - task.escalate
+      - task.risk_level.escalate
+      - plan.approve
+      - review.waive
+      - decision.make
+      - decision.evaluate_measurement
+      - org.charter.modify
+      - org.department.manage
+      - org.role.grant.live_capital
+      - org.operating_mode.restore
+      - approval.grant
+      - approval.grant.live_capital
+      - approval.grant.irreversible
+      - policy.override
+      - capability.risk_class.modify
+      - agent.drain
+      - agent.deactivate
+      - agent.disable
+      - outcome.record
+      - outcome.withdraw
+      - outcome.supersede
+      - lesson.draft
+      - lesson.approve
+      - lesson.withdraw
+      - lesson.supersede
+      - lesson.evaluate
+
+  - key: role.ai_cio
+    name: AI CIO
+    purpose: Plan tasks, synthesise findings and propose decisions. No capital authority.
+    max_risk_level: HIGH
+    can_approve_up_to: ROUTINE
+    required_capabilities: [governance.planning]
+    granted_permissions:
+      - task.propose
+      - task.admit
+      - plan.create
+      - plan.approve
+      - assignment.create
+      - assignment.revoke
+      - artifact.create
+      - artifact.submit
+      - decision.propose
+      - decision.make
+      - decision.evaluate_measurement
+      - action.request.read_only
+      - action.request.simulation
+      - action.execute.sandbox
+      - agent.deactivate
+      - lesson.draft
+
+  - key: role.reviewer
+    name: Independent Reviewer
+    purpose: Judge other agents' artifacts. Deliberately cannot produce them.
+    max_risk_level: ELEVATED
+    can_approve_up_to: ROUTINE
+    required_capabilities: [governance.review]
+    granted_permissions:
+      - review.conduct

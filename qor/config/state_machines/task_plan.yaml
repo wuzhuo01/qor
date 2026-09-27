@@ -1,0 +1,62 @@
+# TaskPlan State Machine -- proposal §7.3.
+# A plan is immutable once ACTIVE (I-P4); replanning creates version n+1.
+
+name: task_plan
+entity: TaskPlan
+initial: DRAFT
+
+states:
+  - name: DRAFT
+  - name: PROPOSED
+  - name: APPROVED
+  - name: ACTIVE
+  - name: COMPLETED
+    terminal: true
+  - name: REJECTED
+    terminal: true
+  - name: SUPERSEDED
+    terminal: true
+  - name: ABANDONED
+    terminal: true
+
+transitions:
+  - name: propose
+    from: DRAFT
+    to: PROPOSED
+    guards: [plan_is_dag, plan_nodes_reachable, plan_covers_required_outputs]
+    emits: qor.plan.proposed
+
+  - name: approve
+    from: PROPOSED
+    to: APPROVED
+    permission: plan.approve
+    guards: [plan_no_blocking_review]
+    emits: qor.plan.approved
+
+  - name: reject
+    from: PROPOSED
+    to: REJECTED
+    permission: plan.approve
+    emits: qor.plan.rejected
+
+  - name: activate
+    from: APPROVED
+    to: ACTIVE
+    guards: [plan_is_only_active]
+    emits: qor.plan.activated
+
+  - name: complete
+    from: ACTIVE
+    to: COMPLETED
+    guards: [plan_exit_nodes_settled]
+    emits: qor.plan.completed
+
+  - name: supersede
+    from: [ACTIVE, APPROVED, PROPOSED]
+    to: SUPERSEDED
+    emits: qor.plan.superseded
+
+  - name: abandon
+    from: [DRAFT, PROPOSED, APPROVED, ACTIVE]
+    to: ABANDONED
+    emits: qor.plan.abandoned

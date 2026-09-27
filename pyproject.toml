@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qor"
+version = "0.1.0"
+description = "QOR — AI-Native Organization Runtime"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+qor = "qor.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["qor*"]
+
+[tool.setuptools.package-data]
+qor = ["config/**/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+markers = [
+    "acceptance: V0.1 acceptance tests T1-T13",
+    "invariant: domain invariant tests",
+    "llm: planner parse/validate tests, driven by a scripted LLM double",
+    "live_llm: V0.2/V0.3 tests that require a real LLM provider (skip without credentials)",
+    "v02: V0.2 acceptance tests T14-T29",
+    "v03: V0.3 acceptance tests T30-T33",
+    "v04: V0.4 acceptance tests T34-T43",
+    "v05: V0.5 acceptance tests T44-T55",
+    "v06: V0.6 acceptance tests T56-T65",
+    "v07: V0.7 acceptance tests T66-T78",
+    "v08: V0.8 acceptance tests T79-T88",
+    "v09: V0.9 acceptance tests T89-T100",
+    "v10: V1.0 acceptance tests T101-T118",
+    "v11: V1.1 acceptance tests T119-T138",
+    "decision_measurement: Runtime Decision Measurement Evaluation T139-T162",
+    "exception_governance: Human-Wait Exception Closure T163-T180",
+    "combined_high_lifecycle: Post-Grant SANDBOX Delivery T181-T200",
+    "dependency_aware_collaboration: Organization Collaboration v0.2 T231-T240",
+    "llm_planner_reliability: LLM Planner Reliability v0.1 T264-T268",
+    "qor_scheduler: QOR Scheduler v0.1 T1-T7 (T8 not covered)",
+    "qor_event_router: QOR Event Router v0.1 T1-T13",
+    "qor_human_responsibility: QOR Human Responsibility Binding v0.3 T1-T41",
+    "qor_notification: QOR Notification v0.1 T1-T30",
+    "qor_notification_auto_trigger: QOR Notification Auto-Trigger v0.1 T1-T30",
+    "qor_entry_guard: QOR Task Execution Entry Guard v0.1 T1-T16",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false

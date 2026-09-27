@@ -1,0 +1,35 @@
+# Responsibility -- who is assigned to one human-work fact.
+#
+# ACTIVE is the only current assignment for a source. TRANSFERRED keeps the old
+# human on the old record. COMPLETED is the source finishing its human work.
+# CLEARED is the Human CIO removing the assignment. None of these choose a human,
+# and none of them change the source's own state.
+
+name: responsibility
+entity: Responsibility
+initial: ACTIVE
+
+states:
+  - name: ACTIVE
+  - name: TRANSFERRED
+    terminal: true
+  - name: COMPLETED
+    terminal: true
+  - name: CLEARED
+    terminal: true
+
+transitions:
+  - name: transfer
+    from: ACTIVE
+    to: TRANSFERRED
+    emits: qor.responsibility.transferred
+
+  - name: complete
+    from: ACTIVE
+    to: COMPLETED
+    emits: qor.responsibility.completed
+
+  - name: clear
+    from: ACTIVE
+    to: CLEARED
+    emits: qor.responsibility.cleared

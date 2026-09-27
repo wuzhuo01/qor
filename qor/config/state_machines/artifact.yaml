@@ -1,0 +1,44 @@
+# Artifact State Machine -- proposal §7.7.
+# Content is immutable (I-AR1); only lifecycle status moves. Corrections create a
+# new version and supersede the old one.
+
+name: artifact
+entity: Artifact
+initial: DRAFT
+
+states:
+  - name: DRAFT
+  - name: SUBMITTED
+  - name: UNDER_REVIEW
+  - name: ACCEPTED
+  - name: REJECTED
+    terminal: true
+  - name: SUPERSEDED
+    terminal: true
+
+transitions:
+  - name: submit
+    from: DRAFT
+    to: SUBMITTED
+    guards: [artifact_findings_have_evidence]
+    emits: qor.artifact.submitted
+
+  - name: start_review
+    from: SUBMITTED
+    to: UNDER_REVIEW
+    emits: qor.artifact.under_review
+
+  - name: accept
+    from: [SUBMITTED, UNDER_REVIEW]
+    to: ACCEPTED
+    emits: qor.artifact.accepted
+
+  - name: reject
+    from: UNDER_REVIEW
+    to: REJECTED
+    emits: qor.artifact.rejected
+
+  - name: supersede
+    from: [DRAFT, SUBMITTED, UNDER_REVIEW, ACCEPTED]
+    to: SUPERSEDED
+    emits: qor.artifact.superseded

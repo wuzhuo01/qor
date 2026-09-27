@@ -1,0 +1,20 @@
+# Schedule -- when the organization should open a Task.
+#
+# ENABLED is the only state that may open work. ONCE moves to DISABLED after a
+# successful trigger. EVERY stays ENABLED and advances next_run_at in the service.
+# This machine does not plan, assign, or execute.
+
+name: schedule
+entity: Schedule
+initial: ENABLED
+
+states:
+  - name: ENABLED
+  - name: DISABLED
+    terminal: true
+
+transitions:
+  - name: disable
+    from: ENABLED
+    to: DISABLED
+    emits: qor.schedule.disabled

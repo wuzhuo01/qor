@@ -1,0 +1,95 @@
+# Agent State Machine -- CLAUDE.md §11 (7 states).
+#
+# DRAINING is graceful (respects in-flight assignments); DISABLED is immediate
+# (governance override, in-flight work revoked).
+#
+# `deactivate` is what T13 uses to take an agent offline. It is a new transition
+# name onto an existing state, not a new state.
+
+name: agent
+entity: Agent
+initial: OFFLINE
+
+states:
+  - name: OFFLINE
+  - name: AVAILABLE
+  - name: BUSY
+  - name: WAITING
+  - name: DRAINING
+  - name: ERROR
+    exceptional: true
+  - name: DISABLED
+    exceptional: true
+
+transitions:
+  - name: register
+    from: [OFFLINE, DISABLED]
+    to: AVAILABLE
+    guards: [agent_has_active_role]
+    emits: qor.agent.available
+
+  - name: accept_assignment
+    from: AVAILABLE
+    to: BUSY
+    guards: [agent_has_capacity]
+    emits: qor.agent.busy
+
+  - name: release
+    from: [BUSY, WAITING]
+    to: AVAILABLE
+    emits: qor.agent.available
+
+  - name: wait_external
+    from: BUSY
+    to: WAITING
+    emits: qor.agent.waiting
+
+  - name: resume
+    from: WAITING
+    to: BUSY
+    emits: qor.agent.busy
+
+  - name: fault
+    from: [AVAILABLE, BUSY, WAITING]
+    to: ERROR
+    emits: qor.agent.error
+
+  - name: recover
+    from: ERROR
+    to: AVAILABLE
+    emits: qor.agent.available
+
+  - name: drain
+    from: [AVAILABLE, BUSY]
+    to: DRAINING
+    permission: agent.drain
+    emits: qor.agent.draining
+
+  - name: drained
+    from: DRAINING
+    to: OFFLINE
+    guards: [agent_no_inflight_assignments]
+    emits: qor.agent.offline
+
+  - name: cancel_drain
+    from: DRAINING
+    to: AVAILABLE
+    emits: qor.agent.available
+
+  - name: deactivate
+    from: [AVAILABLE, WAITING]
+    to: OFFLINE
+    permission: agent.deactivate
+    guards: [agent_no_inflight_assignments]
+    emits: qor.agent.offline
+
+  - name: timeout
+    from: [AVAILABLE, BUSY, WAITING, DRAINING]
+    to: OFFLINE
+    emits: qor.agent.offline
+
+  - name: disable
+    from: [OFFLINE, AVAILABLE, BUSY, WAITING, DRAINING, ERROR]
+    to: DISABLED
+    permission: agent.disable
+    emits: qor.agent.disabled

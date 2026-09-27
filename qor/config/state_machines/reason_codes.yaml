@@ -1,0 +1,107 @@
+# Controlled vocabulary for StateTransition.reason_code (I-ST2).
+#
+# Why this matters: with a controlled vocabulary, "why do tasks get blocked?"
+# becomes `GROUP BY reason_code` instead of a human reading prose. This is the
+# data foundation for organizational self-review.
+
+reason_codes:
+  # --- normal progression -------------------------------------------------
+  - ROUTINE_PROGRESSION
+  - HUMAN_REQUEST
+  - PLAN_APPROVED
+  - PLAN_SUPERSEDED
+  - DEPENDENCIES_SATISFIED
+  - CAPABILITY_MATCHED
+  - WORK_SUBMITTED
+  - REVIEW_REQUIRED
+  - REVIEW_NOT_REQUIRED
+  - REVIEW_PASSED
+  - REVIEW_CONDITIONAL
+  - SYNTHESIS_READY
+  - DECISION_MADE
+  - DECISION_NO_ACTION
+  - ACTIONS_REQUESTED
+  - ACTIONS_REACHED_STOP_STATE
+  - OUTPUTS_COMPLETE
+
+  # --- quality / rework ---------------------------------------------------
+  - REVIEW_FAILED_EVIDENCE_INSUFFICIENT
+  - REVIEW_FAILED_METHODOLOGY
+  - REVIEW_FAILED_CONFLICTING_CONCLUSIONS
+  - REWORK_REQUESTED
+  - REWORK_COMPLETED
+
+  # --- blocking -----------------------------------------------------------
+  - DATA_UNAVAILABLE
+  - CAPABILITY_GAP
+  - PLANNER_UNAVAILABLE
+  - PLAN_REJECTED
+  - DEPENDENCY_FAILED
+  - BUDGET_EXHAUSTED
+  - EXTERNAL_SYSTEM_UNAVAILABLE
+  - BLOCKER_RESOLVED
+
+  # --- governance ---------------------------------------------------------
+  - APPROVAL_REQUIRED_BY_POLICY
+  - APPROVAL_GRANTED
+  - APPROVAL_DENIED
+  - APPROVAL_WAIVED_BY_POLICY
+  - APPROVAL_TIMEOUT
+  - PERMISSION_GRANTED
+  - PERMISSION_DENIED
+  - RISK_CHECK_PASSED
+  - RISK_LIMIT_BREACHED
+  - RISK_VETO
+  - AUTHORITY_EXCEEDED
+  - DRY_RUN_STOP_STATE
+  - KILL_SWITCH_ENGAGED
+
+  # --- exceptions ---------------------------------------------------------
+  - ATTEMPTS_EXHAUSTED
+  - HUMAN_WAIT_ESCALATION
+  - ESCALATION_RESOLVED
+  - REPLAN_LIMIT_EXCEEDED
+  - LOW_CONFIDENCE_DISAGREEMENT
+  - UNRECOVERABLE_ERROR
+  - LEASE_EXPIRED
+  - CANCELLED_BY_REQUESTER
+  - CONDITION_FALSE
+
+  # --- agent lifecycle ----------------------------------------------------
+  - AGENT_REGISTERED
+  - AGENT_ASSIGNED_WORK
+  - AGENT_WORK_RELEASED
+  - AGENT_DRAIN_REQUESTED
+  - AGENT_DRAINED
+  - AGENT_DEACTIVATED
+  - AGENT_HEARTBEAT_TIMEOUT
+  - AGENT_DISABLED_BY_GOVERNANCE
+  - AGENT_ERROR_THRESHOLD
+  - AGENT_RECOVERED
+
+  # --- artifact -----------------------------------------------------------
+  - ARTIFACT_SUBMITTED
+  - ARTIFACT_ACCEPTED
+  - ARTIFACT_REJECTED
+  - ARTIFACT_SUPERSEDED
+
+  # --- outcome -----------------------------------------------------------
+  - OUTCOME_RECORDED
+  - OUTCOME_WITHDRAWN
+  - OUTCOME_SUPERSEDED
+  - FOLLOW_THROUGH_REQUIRED
+  - FOLLOW_THROUGH_WAIVED
+  - FOLLOW_THROUGH_FULFILLED
+  - LESSON_DRAFTED
+  - LESSON_APPROVED
+  - LESSON_WITHDRAWN
+  - LESSON_SUPERSEDED
+  - LESSON_EVALUATED
+  - SCHEDULE_DUE
+  - SCHEDULE_DISABLED
+  - EVENT_ROUTE_OPENED
+  - RESPONSIBILITY_ASSIGNED
+  - RESPONSIBILITY_TRANSFERRED
+  - RESPONSIBILITY_CLEARED
+  - RESPONSIBILITY_COMPLETED
+  - NOTIFICATION_CREATED

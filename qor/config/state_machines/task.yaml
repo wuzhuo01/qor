@@ -1,0 +1,167 @@
+# Task State Machine -- CLAUDE.md §10 (11 normal states).
+#
+# AWAITING_HUMAN is policy-expected human involvement and does NOT count toward
+# the exception rate. ESCALATED is a genuine exception and does. Collapsing the
+# two would make "how many real exceptions did we have this month" unanswerable.
+
+name: task
+entity: Task
+initial: DRAFT
+
+states:
+  - name: DRAFT
+  - name: OPEN
+  - name: PLANNING
+  - name: READY
+  - name: RUNNING
+  - name: REVIEW
+  - name: SYNTHESIZING
+  - name: DECIDING
+  - name: AWAITING_HUMAN
+    description: Policy-expected human involvement. Not an exception.
+  - name: ACTION_PENDING
+  - name: COMPLETED
+    terminal: true
+  - name: BLOCKED
+    exceptional: true
+  - name: ESCALATED
+    exceptional: true
+  - name: FAILED
+    terminal: true
+    exceptional: true
+  - name: CANCELLED
+    terminal: true
+    exceptional: true
+
+transitions:
+  - name: admit
+    from: DRAFT
+    to: OPEN
+    permission: task.admit
+    guards: [task_objective_present, task_risk_level_set, task_sponsor_present_if_capital]
+    emits: qor.task.opened
+
+  - name: start_planning
+    from: OPEN
+    to: PLANNING
+    guards: [task_owner_present]
+    emits: qor.task.planning_started
+
+  - name: plan_approved
+    from: PLANNING
+    to: READY
+    guards: [task_has_active_plan, plan_covers_required_outputs]
+    emits: qor.task.ready
+
+  - name: start
+    from: READY
+    to: RUNNING
+    guards: [task_has_ready_node]
+    emits: qor.task.started
+
+  - name: nodes_submitted
+    from: RUNNING
+    to: REVIEW
+    guards: [all_work_nodes_settled]
+    emits: qor.task.review_started
+
+  - name: rework
+    from: REVIEW
+    to: RUNNING
+    guards: [has_reworkable_node]
+    emits: qor.task.rework
+
+  - name: replan
+    from: [REVIEW, RUNNING]
+    to: PLANNING
+    permission: plan.create
+    guards: [replan_budget_available]
+    emits: qor.task.replanning
+
+  - name: reviews_passed
+    from: REVIEW
+    to: SYNTHESIZING
+    guards: [all_required_reviews_resolved]
+    emits: qor.task.synthesizing
+
+  - name: synthesis_ready
+    from: SYNTHESIZING
+    to: DECIDING
+    guards: [synthesis_artifact_accepted]
+    emits: qor.task.deciding
+
+  - name: decided_no_action
+    from: DECIDING
+    to: COMPLETED
+    guards: [decision_is_decided, decision_requires_no_action, required_outputs_present]
+    emits: qor.task.completed
+
+  - name: request_human_approval
+    from: DECIDING
+    to: AWAITING_HUMAN
+    guards: [approval_required_by_policy]
+    emits: qor.task.awaiting_human
+
+  - name: actions_requested
+    from: DECIDING
+    to: ACTION_PENDING
+    guards: [decision_is_decided, task_has_actions]
+    emits: qor.task.action_pending
+
+  - name: human_granted
+    from: AWAITING_HUMAN
+    to: ACTION_PENDING
+    guards: [approval_granted]
+    emits: qor.task.approval_granted
+
+  - name: human_denied
+    from: AWAITING_HUMAN
+    to: DECIDING
+    guards: [approval_denied]
+    emits: qor.task.approval_denied
+
+  - name: action_needs_approval
+    from: ACTION_PENDING
+    to: AWAITING_HUMAN
+    guards: [approval_required_by_policy]
+    emits: qor.task.awaiting_human
+
+  - name: actions_settled
+    from: ACTION_PENDING
+    to: COMPLETED
+    guards: [all_actions_at_stop_state, required_outputs_present]
+    emits: qor.task.completed
+
+  # --- exceptions ---------------------------------------------------------
+  - name: block
+    from: [OPEN, PLANNING, READY, RUNNING, REVIEW, SYNTHESIZING, DECIDING, ACTION_PENDING]
+    to: BLOCKED
+    emits: qor.task.blocked
+
+  - name: unblock
+    from: BLOCKED
+    to: $previous
+    emits: qor.task.unblocked
+
+  - name: escalate
+    from: AWAITING_HUMAN
+    to: ESCALATED
+    permission: task.escalate
+    emits: qor.task.escalated
+
+  - name: resolve_escalation
+    from: ESCALATED
+    to: AWAITING_HUMAN
+    permission: task.resolve_escalation
+    emits: qor.task.escalation_resolved
+
+  - name: fail
+    from: [DRAFT, OPEN, PLANNING, READY, RUNNING, REVIEW, SYNTHESIZING, DECIDING, AWAITING_HUMAN, ACTION_PENDING, BLOCKED, ESCALATED]
+    to: FAILED
+    emits: qor.task.failed
+
+  - name: cancel
+    from: [DRAFT, OPEN, PLANNING, READY, RUNNING, REVIEW, SYNTHESIZING, DECIDING, AWAITING_HUMAN, ACTION_PENDING, BLOCKED, ESCALATED]
+    to: CANCELLED
+    permission: task.cancel
+    emits: qor.task.cancelled

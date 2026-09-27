@@ -1,0 +1,61 @@
+# Overlay for --profile generic. Same organization as the default load.
+
+organization:
+  name: Organization
+  mission: Run accountable work from a configured capability catalog.
+  operating_mode: NORMAL
+  charter_version: "1.0"
+  hard_limits: {}
+
+departments:
+  - key: dept.governance
+    name: Governance
+    mandate: Admit work, review it, and decide without proving a claim by its own author.
+    owns_capabilities:
+      - governance.review
+      - governance.planning
+      - governance.decision
+
+agents:
+  - key: agent.human_cio
+    name: Human CIO
+    kind: HUMAN
+    roles: [role.human_cio]
+    department: dept.governance
+    max_concurrent_assignments: 4
+    trust_score: 1.0
+    capabilities: []
+
+  - key: agent.ai_cio
+    name: AI CIO
+    kind: AGENT
+    roles: [role.ai_cio]
+    department: dept.governance
+    max_concurrent_assignments: 3
+    trust_score: 0.80
+    capabilities:
+      - {capability_key: governance.planning, proficiency: 0.85}
+      - {capability_key: governance.decision, proficiency: 0.82}
+
+  - key: agent.reviewer
+    name: Reviewer
+    kind: AGENT
+    roles: [role.reviewer]
+    department: dept.governance
+    max_concurrent_assignments: 3
+    trust_score: 0.81
+    capabilities:
+      - {capability_key: governance.review, proficiency: 0.82}
+
+  - key: agent.senior_reviewer
+    name: Senior Reviewer
+    kind: AGENT
+    roles: [role.reviewer]
+    department: dept.governance
+    max_concurrent_assignments: 3
+    trust_score: 0.85
+    capabilities:
+      - {capability_key: governance.review, proficiency: 0.78}
+
+human_cio: agent.human_cio
+default_task_owner: agent.ai_cio

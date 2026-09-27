@@ -1,0 +1,126 @@
+# TaskNode State Machine -- proposal §7.4.
+#
+# Rework is NOT a cycle in the plan graph: it is REVIEWING -> RUNNING with
+# attempt+1 on the same node. The plan stays a DAG.
+
+name: task_node
+entity: TaskNode
+initial: PENDING
+
+states:
+  - name: PENDING
+  - name: READY
+  - name: ASSIGNING
+  - name: ASSIGNED
+  - name: RUNNING
+  - name: SUBMITTED
+  - name: REVIEWING
+  - name: ACCEPTED
+    terminal: true
+  - name: SKIPPED
+    terminal: true
+  - name: BLOCKED
+    exceptional: true
+  - name: ESCALATED
+    exceptional: true
+  - name: FAILED
+    terminal: true
+    exceptional: true
+  - name: CANCELLED
+    terminal: true
+    exceptional: true
+
+transitions:
+  - name: deps_met
+    from: PENDING
+    to: READY
+    guards: [node_dependencies_satisfied]
+    emits: qor.node.ready
+
+  - name: start_assigning
+    from: READY
+    to: ASSIGNING
+    emits: qor.node.assigning
+
+  - name: assigned
+    from: ASSIGNING
+    to: ASSIGNED
+    guards: [node_has_open_assignment]
+    emits: qor.node.assigned
+
+  - name: capability_gap
+    from: ASSIGNING
+    to: BLOCKED
+    emits: qor.delegation.no_capable_agent
+
+  - name: start
+    from: ASSIGNED
+    to: RUNNING
+    emits: qor.node.started
+
+  - name: submit
+    from: RUNNING
+    to: SUBMITTED
+    guards: [node_has_artifact]
+    emits: qor.node.submitted
+
+  - name: start_review
+    from: SUBMITTED
+    to: REVIEWING
+    guards: [node_review_required]
+    emits: qor.node.review_started
+
+  - name: accept_without_review
+    from: SUBMITTED
+    to: ACCEPTED
+    guards: [node_review_not_required]
+    emits: qor.node.accepted
+
+  - name: review_passed
+    from: REVIEWING
+    to: ACCEPTED
+    guards: [node_reviews_resolved]
+    emits: qor.node.accepted
+
+  - name: rework
+    from: REVIEWING
+    to: RUNNING
+    guards: [node_review_failed_reworkable, node_attempts_available]
+    emits: qor.node.rework
+
+  - name: attempts_exhausted
+    from: REVIEWING
+    to: ESCALATED
+    guards: [node_attempts_exhausted]
+    emits: qor.node.escalated
+
+  - name: skip
+    from: [PENDING, READY]
+    to: SKIPPED
+    guards: [node_condition_false]
+    emits: qor.node.skipped
+
+  - name: block
+    from: [PENDING, READY, ASSIGNING, ASSIGNED, RUNNING, SUBMITTED, REVIEWING]
+    to: BLOCKED
+    emits: qor.node.blocked
+
+  - name: unblock
+    from: BLOCKED
+    to: $previous
+    emits: qor.node.unblocked
+
+  - name: escalate
+    from: [PENDING, READY, ASSIGNING, ASSIGNED, RUNNING, SUBMITTED, REVIEWING, BLOCKED]
+    to: ESCALATED
+    emits: qor.node.escalated
+
+  - name: fail
+    from: [PENDING, READY, ASSIGNING, ASSIGNED, RUNNING, SUBMITTED, REVIEWING, BLOCKED, ESCALATED]
+    to: FAILED
+    emits: qor.node.failed
+
+  - name: cancel
+    from: [PENDING, READY, ASSIGNING, ASSIGNED, RUNNING, SUBMITTED, REVIEWING, BLOCKED, ESCALATED]
+    to: CANCELLED
+    emits: qor.node.cancelled
