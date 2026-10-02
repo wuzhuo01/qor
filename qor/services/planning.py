@@ -135,7 +135,7 @@ class PlanningService:
                 reason_code="PLAN_APPROVED",
                 reason=(
                     f"plan {plan.ref} activated with {len(nodes)} nodes "
-                    f"({self._planner.kind} planner): {draft.strategy_rationale[:120]}"
+                    f"({self._planner.kind} planner): {draft.decision_rationale[:120]}"
                 ),
                 correlation_id=task.id,
             ).entity
@@ -421,7 +421,7 @@ class PlanningService:
             revision=task.plan_revision_count + 1,
             node_ids=tuple(n.id for n in nodes),
             edges=edges,
-            strategy_rationale=draft.strategy_rationale,
+            decision_rationale=draft.decision_rationale,
             planner_kind=self._planner.kind,
             planner_provider=getattr(self._planner, "provider", self._planner.kind),
             expected_outputs=tuple(draft.expected_outputs)
@@ -434,14 +434,14 @@ class PlanningService:
             plan,
             actor=actor,
             reason_code="ROUTINE_PROGRESSION",
-            reason=f"{self._planner.kind} planner proposed: {draft.strategy_rationale}",
+            reason=f"{self._planner.kind} planner proposed: {draft.decision_rationale}",
             correlation_id=task.id,
             event_name="qor.plan.created",
             payload={
                 "planner": self._planner.kind,
                 "provider": getattr(self._planner, "provider", self._planner.kind),
                 "node_count": len(nodes),
-                "rationale": draft.strategy_rationale,
+                "rationale": draft.decision_rationale,
             },
         )
 

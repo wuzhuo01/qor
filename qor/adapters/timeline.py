@@ -173,7 +173,7 @@ class Timeline:
         answers.append(
             (
                 "2. Why did the AI CIO split it this way?",
-                plan.strategy_rationale if plan else "no plan",
+                plan.decision_rationale if plan else "no plan",
             )
         )
         answers.append(

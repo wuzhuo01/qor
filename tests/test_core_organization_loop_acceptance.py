@@ -77,7 +77,7 @@ class GenericOrgPlanner:
                     depends_on=("synth",),
                 ),
             ),
-            strategy_rationale=(
+            decision_rationale=(
                 "Two capability-addressed work nodes, the second depending on the first, "
                 "then synthesis and a recommendation. No agent is named."
             ),

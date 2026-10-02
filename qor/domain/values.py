@@ -24,7 +24,6 @@ _LEGACY_EVIDENCE_KINDS = frozenset(
     {
         "artifact",
         "attribution",
-        "backtest",
         "classification",
         "count",
         "distribution",
@@ -33,7 +32,6 @@ _LEGACY_EVIDENCE_KINDS = frozenset(
         "limit",
         "metric",
         "observation",
-        "pnl",
         "record",
         "test",
         "timeseries",

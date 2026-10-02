@@ -118,7 +118,7 @@ class StubPlanner:
 
         return PlanDraft(
             nodes=tuple(nodes),
-            strategy_rationale=rationale,
+            decision_rationale=rationale,
             expected_outputs=tuple(dict.fromkeys(n.expected_artifact_type for n in nodes)),
         )
 

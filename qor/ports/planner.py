@@ -176,17 +176,17 @@ class PlanDraft(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     nodes: tuple[NodeDraft, ...]
-    strategy_rationale: str
+    decision_rationale: str
     expected_outputs: tuple[ArtifactType, ...] = ()
 
     @model_validator(mode="after")
     def _non_empty(self) -> Self:
         if not self.nodes:
             raise InvariantViolation("I-P3", "PlanDraft has no nodes")
-        if not self.strategy_rationale.strip():
+        if not self.decision_rationale.strip():
             # Audit question 2 is "why did the AI CIO split the task this way".
             # An unexplained plan cannot answer it.
-            raise InvariantViolation("I-P5", "PlanDraft.strategy_rationale must be non-empty")
+            raise InvariantViolation("I-P5", "PlanDraft.decision_rationale must be non-empty")
         keys = [n.key for n in self.nodes]
         if len(set(keys)) != len(keys):
             raise InvariantViolation("I-P2", f"PlanDraft has duplicate node keys: {keys}")

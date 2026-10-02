@@ -130,7 +130,7 @@ class TaskPlan(BaseModel):
 
     node_ids: tuple[UUID, ...] = ()
     edges: tuple[TaskEdge, ...] = ()
-    strategy_rationale: str = ""
+    decision_rationale: str = ""
     planner_kind: str = ""
     planner_provider: str = ""
     supersedes_plan_id: UUID | None = None

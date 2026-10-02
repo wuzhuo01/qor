@@ -41,7 +41,7 @@ Hard rules:
    other. If two analyses can be done independently, they must be.
 5. Exactly one node must produce SYNTHESIS and exactly one must produce
    RECOMMENDATION. Both must have node_kind SYNTHESIS and must depend on upstream work.
-6. Explain your decomposition in strategy_rationale. State why you split it this way.
+6. Explain your decomposition in decision_rationale. State why you split it this way.
    Quote distinctive terms from the OBJECTIVE so the rationale is about this
    objective, not a reusable template.
 7. If BINDING CONSTRAINTS are present, the plan is illegal unless EACH is satisfied:
@@ -49,19 +49,19 @@ Hard rules:
    constraint's outcome_ref, and the RECOMMENDATION node MUST depend on that node
    (directly or via synthesis). For ADDRESS_FULFILLED_RESPONSE a WORK node MUST set
    addresses_decision_ref to that constraint's decision_ref. The same WORK node may
-   carry both fields. Quoting refs in strategy_rationale is not a substitute.
+   carry both fields. Quoting refs in decision_rationale is not a substitute.
 
 Return ONLY a JSON object. No prose, no markdown fences."""
 
 SCHEMA_HINT = """{
-  "strategy_rationale": "string, why this decomposition",
+  "decision_rationale": "string, why this decomposition",
   "nodes": [
     {
       "key": "n1",
       "name": "short label",
       "objective": "what must be established",
       "required_capabilities": ["capability.key"],
-      "expected_artifact_type": "ANALYSIS_REPORT|BACKTEST_RESULT|RISK_ASSESSMENT|STATISTICAL_VALIDATION|SYNTHESIS|RECOMMENDATION",
+      "expected_artifact_type": "ANALYSIS_REPORT|ANALYSIS_RESULT|RISK_ASSESSMENT|VALIDATION_REPORT|SYNTHESIS|RECOMMENDATION",
       "node_kind": "WORK|SYNTHESIS",
       "depends_on": ["n1"],
       "review_required": true,
@@ -226,9 +226,9 @@ class LLMPlanner:
                 )
             )
 
-        rationale = str(data.get("strategy_rationale", "")).strip()
+        rationale = str(data.get("decision_rationale", "")).strip()
         if not rationale:
-            raise PlannerOutputInvalid("'strategy_rationale' is required and was empty")
+            raise PlannerOutputInvalid("'decision_rationale' is required and was empty")
 
         violations = binding_constraint_violations(tuple(nodes), request.binding_constraints)
         if violations:
@@ -236,7 +236,7 @@ class LLMPlanner:
 
         return PlanDraft(
             nodes=tuple(nodes),
-            strategy_rationale=rationale,
+            decision_rationale=rationale,
             expected_outputs=tuple(dict.fromkeys(n.expected_artifact_type for n in nodes)),
         )
 
