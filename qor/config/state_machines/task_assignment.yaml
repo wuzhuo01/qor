@@ -1,0 +1,91 @@
+# TaskAssignment State Machine -- proposal §7.5.
+#
+# Note SUBMITTED != node ACCEPTED. The organization, not the executor, decides
+# when work is done; that is what the review policy is for.
+
+name: task_assignment
+entity: TaskAssignment
+initial: PROPOSED
+
+states:
+  - name: PROPOSED
+  - name: OFFERED
+  - name: ACCEPTED
+  - name: IN_PROGRESS
+  - name: SUBMITTED
+  - name: CLOSED
+    terminal: true
+  - name: DECLINED
+    terminal: true
+  - name: TIMED_OUT
+    terminal: true
+    exceptional: true
+  - name: FAILED
+    terminal: true
+    exceptional: true
+  - name: REASSIGNED
+    terminal: true
+  - name: REVOKED
+    terminal: true
+    exceptional: true
+  - name: CANCELLED
+    terminal: true
+
+transitions:
+  - name: offer
+    from: PROPOSED
+    to: OFFERED
+    guards: [assignment_permissions_within_role, assignment_assignee_not_forbidden]
+    emits: qor.assignment.offered
+
+  - name: accept
+    from: OFFERED
+    to: ACCEPTED
+    emits: qor.assignment.accepted
+
+  - name: decline
+    from: OFFERED
+    to: DECLINED
+    emits: qor.assignment.declined
+
+  - name: start
+    from: ACCEPTED
+    to: IN_PROGRESS
+    emits: qor.assignment.started
+
+  - name: submit
+    from: IN_PROGRESS
+    to: SUBMITTED
+    guards: [assignment_has_result]
+    emits: qor.assignment.submitted
+
+  - name: close
+    from: SUBMITTED
+    to: CLOSED
+    emits: qor.assignment.closed
+
+  - name: timeout
+    from: [OFFERED, ACCEPTED, IN_PROGRESS]
+    to: TIMED_OUT
+    emits: qor.assignment.timed_out
+
+  - name: fail
+    from: [ACCEPTED, IN_PROGRESS]
+    to: FAILED
+    emits: qor.assignment.failed
+
+  - name: reassign
+    from: [PROPOSED, OFFERED, ACCEPTED, IN_PROGRESS]
+    to: REASSIGNED
+    emits: qor.assignment.reassigned
+
+  - name: revoke
+    from: [PROPOSED, OFFERED, ACCEPTED, IN_PROGRESS, SUBMITTED]
+    to: REVOKED
+    permission: assignment.revoke
+    emits: qor.assignment.revoked
+
+  - name: cancel
+    from: [PROPOSED, OFFERED, ACCEPTED, IN_PROGRESS]
+    to: CANCELLED
+    emits: qor.assignment.cancelled

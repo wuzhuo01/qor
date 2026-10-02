@@ -1,0 +1,29 @@
+# Outcome State Machine -- V0.3.
+#
+# An Outcome is recorded already AUTHORITATIVE. Withdrawal and supersession are the
+# only status changes; they exist so a retracted fact cannot keep binding later plans.
+# Task's machine is not modified.
+
+name: outcome
+entity: Outcome
+initial: AUTHORITATIVE
+
+states:
+  - name: AUTHORITATIVE
+  - name: WITHDRAWN
+    terminal: true
+  - name: SUPERSEDED
+    terminal: true
+
+transitions:
+  - name: withdraw
+    from: AUTHORITATIVE
+    to: WITHDRAWN
+    permission: outcome.withdraw
+    emits: qor.outcome.withdrawn
+
+  - name: supersede
+    from: AUTHORITATIVE
+    to: SUPERSEDED
+    permission: outcome.supersede
+    emits: qor.outcome.superseded

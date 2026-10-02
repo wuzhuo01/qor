@@ -1,0 +1,68 @@
+# Review State Machine -- CLAUDE.md §12, rulings C4 + E2.
+#
+# Terminal states are irreversible. Rework does NOT return FAILED -> RUNNING on the
+# same review; it creates a NEW review with round = n+1 linked via
+# rework_of_review_id. Otherwise "why did round 1 fail" gets overwritten and the
+# audit chain breaks.
+#
+# Middle state is named RUNNING (E2), matching the baseline. Log ambiguity with
+# Task.RUNNING is resolved by entity_type, not by renaming.
+
+name: review
+entity: Review
+initial: PENDING
+
+states:
+  - name: PENDING
+  - name: RUNNING
+  - name: PASSED
+    terminal: true
+  - name: FAILED
+    terminal: true
+  - name: CONDITIONAL
+    terminal: true
+  - name: BLOCKED
+    exceptional: true
+  - name: CANCELLED
+    terminal: true
+
+transitions:
+  - name: start
+    from: PENDING
+    to: RUNNING
+    permission: review.conduct
+    guards: [reviewer_is_independent, reviewer_is_authorized]
+    emits: qor.review.started
+
+  - name: pass
+    from: RUNNING
+    to: PASSED
+    guards: [review_no_blocking_findings]
+    emits: qor.review.passed
+
+  - name: conditional
+    from: RUNNING
+    to: CONDITIONAL
+    guards: [review_no_blocking_findings, review_has_conditions]
+    emits: qor.review.conditional
+
+  - name: fail
+    from: RUNNING
+    to: FAILED
+    guards: [review_has_blocking_findings]
+    emits: qor.review.failed
+
+  - name: block
+    from: [PENDING, RUNNING]
+    to: BLOCKED
+    emits: qor.review.blocked
+
+  - name: unblock
+    from: BLOCKED
+    to: RUNNING
+    emits: qor.review.unblocked
+
+  - name: cancel
+    from: [PENDING, RUNNING, BLOCKED]
+    to: CANCELLED
+    emits: qor.review.cancelled

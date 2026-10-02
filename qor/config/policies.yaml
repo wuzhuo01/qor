@@ -1,0 +1,80 @@
+# Policies. These are the knobs that change how the organization behaves without
+# changing what it is. Nothing here introduces a state or an object.
+
+# --- when independent review is mandatory ---------------------------------
+review:
+  # Below this task risk level, review can be waived for READ_ONLY capabilities.
+  always_required_at_or_above: ELEVATED
+  # The default organization has no business capabilities to force here.
+  # A profile that supplies work capabilities may list them.
+  always_required_capabilities: []
+  min_reviewers: 1
+  reviewer_capability: governance.review
+  # Rubric applied by the reviewer runtime. Mechanical on purpose: a review that
+  # cannot be stated as checks is a review that cannot be audited.
+  rubric:
+    - R1 every finding cites at least one evidence item
+    - R2 methodology is stated
+    - R3 uncertainty declares at least one assumption or known unknown
+    - R4 confidence states its basis
+    - R5 statistical claims report a sample size
+
+# --- when a human must approve --------------------------------------------
+approval:
+  # Approval is required when ANY of these is true.
+  required_when:
+    environment_in: [PAPER, LIVE]
+    task_risk_at_or_above: HIGH
+    decision_irreversible: true
+    capability_risk_class_at_or_above: REALITY_AFFECTING
+  # A SANDBOX + dry_run action satisfies none of the above, so the
+  # APPROVAL check runs and returns WAIVED with this policy reference. The check is
+  # executed and recorded; it is not skipped.
+  waiver_policy_ref: POLICY-APPROVAL-V1#sandbox_readonly
+
+# --- action gateway --------------------------------------------------------
+action:
+  # Policy stop states, consumed by the Task guard all_actions_at_stop_state.
+  # dry_run actions stop at APPROVED and never enter EXECUTING.
+  dry_run_stop_state: APPROVED
+  # Environments a task may target, by task risk level.
+  allowed_environments:
+    ROUTINE: [SANDBOX]
+    ELEVATED: [SANDBOX, PAPER]
+    HIGH: [SANDBOX, PAPER]
+    CRITICAL: [SANDBOX, PAPER, LIVE]
+  # Irreversible actions must be dry-run first and the result attached to approval.
+  require_dry_run_when_irreversible: true
+  risk_checks:
+    - name: environment_permitted
+    - name: within_organization_hard_limits
+    - name: capability_risk_class_permitted
+
+# --- delegation scoring ----------------------------------------------------
+# Weights, not rules. Changing them changes who gets picked; it cannot change the
+# fact that only capability holders are eligible.
+delegation:
+  weights:
+    proficiency: 0.55
+    trust_score: 0.25
+    idle_capacity: 0.20
+  # Applied after filtering, before scoring.
+  filters:
+    - capability_match
+    - permission_sufficient
+    - not_forbidden_on_node
+    - state_available
+    - has_capacity
+  tie_breaker: agent_ref
+
+# --- planning --------------------------------------------------------------
+planning:
+  max_nodes: 10
+  max_plan_revisions: 2
+  # A plan must produce every artifact type the task declared as required.
+  enforce_output_coverage: true
+
+# --- task node -------------------------------------------------------------
+execution:
+  max_attempts_per_node: 2
+  lease_seconds: 300

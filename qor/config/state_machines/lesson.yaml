@@ -1,0 +1,35 @@
+# Lesson State Machine -- V1.0.
+#
+# A Lesson is drafted as CANDIDATE. Only Human approval makes it organizational
+# knowledge, and even then it is Planner context, never a BindingConstraint.
+
+name: lesson
+entity: Lesson
+initial: CANDIDATE
+
+states:
+  - name: CANDIDATE
+  - name: APPROVED
+  - name: WITHDRAWN
+    terminal: true
+  - name: SUPERSEDED
+    terminal: true
+
+transitions:
+  - name: approve
+    from: CANDIDATE
+    to: APPROVED
+    permission: lesson.approve
+    emits: qor.lesson.approved
+
+  - name: withdraw
+    from: APPROVED
+    to: WITHDRAWN
+    permission: lesson.withdraw
+    emits: qor.lesson.withdrawn
+
+  - name: supersede
+    from: APPROVED
+    to: SUPERSEDED
+    permission: lesson.supersede
+    emits: qor.lesson.superseded

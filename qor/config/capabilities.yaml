@@ -1,0 +1,32 @@
+# Default capability catalog.
+#
+# These are organizational machinery. They are not a business catalog.
+# A caller that needs plannable work supplies that catalog for the run.
+# sandbox.world_increment is the existing controlled sandbox action. Its
+# required permission keeps it out of the planner offer.
+
+capabilities:
+  - key: governance.review
+    name: Independent Review
+    description: Independently evaluate another agent's artifact against a rubric.
+    risk_class: ADVISORY
+    required_permissions: [review.conduct]
+
+  - key: governance.planning
+    name: Task Planning
+    description: Decompose an objective into a capability-addressed task graph.
+    risk_class: ADVISORY
+    required_permissions: [plan.create]
+
+  - key: governance.decision
+    name: Decision Formation
+    description: Commit the organization to a course of action based on evidence.
+    risk_class: ADVISORY
+    required_permissions: [decision.propose]
+
+  - key: sandbox.world_increment
+    name: Sandbox World Increment
+    description: Increment a named counter in the controlled sandbox world.
+    risk_class: SIMULATION_AFFECTING
+    required_permissions: [action.request.simulation]
+    verifiable: true

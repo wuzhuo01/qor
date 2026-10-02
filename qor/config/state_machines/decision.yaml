@@ -1,0 +1,87 @@
+# Decision State Machine -- proposal §7.9 (ruling C3: split from Approval).
+#
+# A Decision commits the organization to a course of action. It never describes
+# how to execute -- that is Action's job (I10).
+
+name: decision
+entity: Decision
+initial: DRAFT
+
+states:
+  - name: DRAFT
+  - name: PROPOSED
+  - name: UNDER_REVIEW
+  - name: PENDING_APPROVAL
+  - name: DECIDED
+  - name: REJECTED
+    terminal: true
+  - name: WITHDRAWN
+    terminal: true
+  - name: ESCALATED
+    exceptional: true
+  - name: EXPIRED
+    terminal: true
+  - name: SUPERSEDED
+    terminal: true
+
+transitions:
+  - name: propose
+    from: DRAFT
+    to: PROPOSED
+    permission: decision.propose
+    guards: [decision_has_evidence, decision_has_alternatives, decision_has_measurement_plan]
+    emits: qor.decision.proposed
+
+  - name: start_review
+    from: PROPOSED
+    to: UNDER_REVIEW
+    emits: qor.decision.under_review
+
+  - name: request_approval
+    from: [PROPOSED, UNDER_REVIEW]
+    to: PENDING_APPROVAL
+    guards: [decision_requires_approval]
+    emits: qor.decision.pending_approval
+
+  - name: decide
+    from: [PROPOSED, UNDER_REVIEW]
+    to: DECIDED
+    guards: [decision_approval_not_required, decision_maker_has_authority]
+    emits: qor.decision.decided
+
+  - name: decide_after_approval
+    from: PENDING_APPROVAL
+    to: DECIDED
+    guards: [decision_approval_granted]
+    emits: qor.decision.decided
+
+  - name: reject
+    from: [UNDER_REVIEW, PENDING_APPROVAL]
+    to: REJECTED
+    emits: qor.decision.rejected
+
+  - name: escalate
+    from: [PROPOSED, UNDER_REVIEW, PENDING_APPROVAL]
+    to: ESCALATED
+    emits: qor.decision.escalated
+
+  - name: resolve_escalation
+    from: ESCALATED
+    to: $previous
+    permission: task.resolve_escalation
+    emits: qor.decision.escalation_resolved
+
+  - name: withdraw
+    from: [DRAFT, PROPOSED, UNDER_REVIEW]
+    to: WITHDRAWN
+    emits: qor.decision.withdrawn
+
+  - name: expire
+    from: DECIDED
+    to: EXPIRED
+    emits: qor.decision.expired
+
+  - name: supersede
+    from: DECIDED
+    to: SUPERSEDED
+    emits: qor.decision.superseded

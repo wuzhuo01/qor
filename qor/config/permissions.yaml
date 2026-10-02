@@ -1,0 +1,122 @@
+# Permission catalog, HUMAN-CIO exclusives, and SYSTEM-only fields.
+# Corresponds to proposal §5.21.
+
+# Dotted naming: <object>.<verb>[.<qualifier>]. Prefix matching is how policies
+# express "any action request" without enumerating every operation.
+permissions:
+  - task.propose
+  - task.admit
+  - task.cancel
+  - task.resolve_escalation
+  - task.escalate
+  - task.risk_level.escalate
+
+  - plan.create
+  - plan.approve
+
+  - assignment.create
+  - assignment.revoke
+
+  - artifact.create
+  - artifact.submit
+
+  - review.conduct
+  - review.waive
+
+  - decision.propose
+  - decision.make
+  - decision.evaluate_measurement
+
+  - action.request.read_only
+  - action.request.simulation
+  - action.execute
+  - action.execute.sandbox
+  - action.compensate
+
+  - agent.register
+  - agent.drain
+  - agent.deactivate
+  - agent.disable
+
+  - org.charter.modify
+  - org.department.manage
+  - org.role.grant.live_capital
+  - org.operating_mode.restore
+
+  - approval.grant
+  - approval.grant.live_capital
+  - approval.grant.irreversible
+
+  - policy.override
+  - capability.risk_class.modify
+
+  - outcome.record
+  - outcome.withdraw
+  - outcome.supersede
+  - lesson.draft
+  - lesson.approve
+  - lesson.withdraw
+  - lesson.supersede
+  - lesson.evaluate
+
+# Invariant I26: none of these may ever be reachable by an Agent with kind=AI.
+# Enforced at organization load time, not by convention.
+#
+# capability.risk_class.modify is the one that is easy to miss. If an AI could
+# downgrade a capability from REALITY_AFFECTING to READ_ONLY, it would gain a
+# fully legal way to bypass the Action Gateway -- no rule broken, gate simply no
+# longer applies.
+human_cio_exclusive:
+  - org.charter.modify
+  - org.department.manage
+  - org.role.grant.live_capital
+  - task.risk_level.escalate
+  - task.escalate
+  - task.resolve_escalation
+  - approval.grant
+  - approval.grant.live_capital
+  - approval.grant.irreversible
+  - policy.override
+  - org.operating_mode.restore
+  - capability.risk_class.modify
+  - outcome.record
+  - outcome.withdraw
+  - outcome.supersede
+  - lesson.approve
+  - lesson.withdraw
+  - lesson.supersede
+  - lesson.evaluate
+
+# Invariant I27: fields only the runtime may write. An external write is rejected.
+# The pattern behind the list: anything an agent could use to make itself look
+# more qualified, or to erase what happened.
+system_only_fields:
+  Agent:
+    - performance
+    - trust_score
+    - current_assignment_count
+  AgentCapability:
+    - proficiency
+    - evidence_count
+  TaskAssignment:
+    - selection
+    - granted_permissions
+  TaskNode:
+    - forbidden_agent_ids
+  Artifact:
+    - content
+    - content_hash
+  Review:
+    - verdict            # after the review reaches a terminal state
+  Action:
+    - checks
+    - verification
+  Task:
+    - source_outcome_id
+  Outcome:
+    - follow_through_kind
+    - follow_through_status
+    - follow_through_task_id
+  StateTransition: ["*"]
+  Event: ["*"]
+  AuditRecord: ["*"]
