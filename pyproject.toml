@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qor"
+version = "0.1.0"
+description = "QOR — AI-Native Organization Runtime"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+qor = "qor.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["qor*"]
+
+[tool.setuptools.package-data]
+qor = ["config/**/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/test_cli_generic_entry.py",
+    "tests/test_core_organization_loop_acceptance.py",
+    "tests/test_core_organization_loop_action_outcome_acceptance.py",
+    "tests/test_entry_guard_acceptance.py",
+    "tests/test_event_router_acceptance.py",
+    "tests/test_evidence_source_review.py",
+    "tests/test_human_responsibility_acceptance.py",
+    "tests/test_invariants.py",
+    "tests/test_notification_acceptance.py",
+    "tests/test_notification_auto_trigger_acceptance.py",
+    "tests/test_public_example.py",
+    "tests/test_qor_dogfooding_acceptance.py",
+    "tests/test_scheduler_acceptance.py",
+    "tests/test_state_machines.py",
+    "tests/test_task_escalated_contract_acceptance.py",
+]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+markers = [
+    "invariant: domain invariant tests",
+    "organization_workflow: Organization workflow v0.1 T241-T251 (STOP, not live_llm)",
+    "organization_workflow_v02: Organization workflow v0.2 T252-T263",
+    "organization_workflow_v03: Organization workflow v0.3 T276-T283",
+    "organization_value: Organization value v0.1 T284-T292",
+    "organization_quality: Organization quality v0.1 T293-T302",
+    "organization_validation: Organization validation v0.1 T303-T314",
+    "planner_feasibility: Planner feasibility v0.1 T269-T274",
+    "qor_scheduler: QOR Scheduler v0.1 T1-T7 (T8 not covered)",
+    "qor_event_router: QOR Event Router v0.1 T1-T13",
+    "qor_human_responsibility: QOR Human Responsibility Binding v0.3 T1-T41",
+    "qor_notification: QOR Notification v0.1 T1-T30",
+    "qor_notification_auto_trigger: QOR Notification Auto-Trigger v0.1 T1-T30",
+    "qor_entry_guard: QOR Task Execution Entry Guard v0.1 T1-T16",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
