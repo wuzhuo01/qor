@@ -126,6 +126,12 @@ QOR 需要 Python 3.11 或更高版本。
 python -m pip install -e ".[dev]"
 ```
 
+先运行公开示例。它使用 StubPlanner 和脚本 Agent，不调用模型：
+
+```bash
+python -m examples.organization_runtime
+```
+
 默认命令加载 generic profile，并在规划之前停止：
 
 ```bash

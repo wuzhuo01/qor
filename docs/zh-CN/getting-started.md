@@ -14,6 +14,12 @@ python -m pip install -e ".[dev]"
 
 ## 第一次运行
 
+先运行公开示例，再运行默认命令。它使用 StubPlanner 和脚本 Agent，不调用模型：
+
+```bash
+python -m examples.organization_runtime
+```
+
 默认 profile 是 `generic`。它有意不包含业务能力，因此规划器没有可以变成工作的能力。
 
 ```bash

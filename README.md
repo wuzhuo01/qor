@@ -126,6 +126,12 @@ QOR requires Python 3.11 or newer.
 python -m pip install -e ".[dev]"
 ```
 
+Run the public example first. It uses StubPlanner and scripted agents, and it does not call a model:
+
+```bash
+python -m examples.organization_runtime
+```
+
 The default command loads the generic profile and stops before planning:
 
 ```bash

@@ -14,6 +14,12 @@ The runtime depends on Pydantic and PyYAML. The `dev` extra adds pytest, Ruff, a
 
 ## First run
 
+Run the public example before the default command. It uses StubPlanner and scripted agents, and it does not call a model:
+
+```bash
+python -m examples.organization_runtime
+```
+
 The default profile is `generic`. It intentionally does not contain domain business capabilities, so it has nothing a planner is allowed to turn into work.
 
 ```bash
